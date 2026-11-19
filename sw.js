@@ -1,0 +1,7 @@
+const C='flm-v1',PRE=['./','index.html','manifest.json','apple-touch-icon.png','icon-192.png','icon-512.png'],
+CDN=['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js','https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'];
+self.addEventListener('install',e=>{e.waitUntil((async()=>{const c=await caches.open(C);await Promise.all(PRE.map(u=>c.add(u).catch(()=>{})));await Promise.all(CDN.map(u=>c.add(new Request(u,{mode:'cors'})).catch(()=>{})));self.skipWaiting()})())});
+self.addEventListener('activate',e=>{e.waitUntil((async()=>{for(const k of await caches.keys())if(k!=C)await caches.delete(k);await self.clients.claim()})())});
+self.addEventListener('fetch',e=>{const r=e.request;if(r.method!='GET')return;const u=new URL(r.url);
+if(u.origin==location.origin){e.respondWith((async()=>{const c=await caches.open(C),m=await c.match(r,{ignoreSearch:true})||(r.mode=='navigate'?await c.match('index.html'):null),f=fetch(r).then(x=>{if(x.ok)c.put(r,x.clone());return x}).catch(()=>null);e.waitUntil(f);return m||(await f)||new Response('Sin conexión',{status:503})})())}
+else if(CDN.includes(r.url)){e.respondWith((async()=>{const c=await caches.open(C),m=await c.match(r);if(m)return m;try{const x=await fetch(r);if(x.ok)c.put(r,x.clone());return x}catch(_){return new Response('',{status:503})}})())}});
